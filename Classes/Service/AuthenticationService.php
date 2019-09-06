@@ -364,10 +364,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
             $newUserUid = $query->getConnection()->lastInsertId($userTable);
 
             // Retrieve the created user from database to get all columns
-            $selectQueryBuild = $this->getDatabaseConnectionPool()->getQueryBuilderForTable($userTable);
-            $user = $selectQueryBuild->select('*')->from($userTable)->where(
-                $selectQueryBuild->expr()->eq('uid', $newUserUid)
-            )->execute()->fetchAll(FetchMode::ASSOCIATIVE);
+            $user = $this->fetchUserFromDatabase($userTable, $newUserUid);
         }
 
         static::getLogger()->debug('Authentication user record processed', $user);
@@ -394,11 +391,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
         }
 
         if ($reloadUserRecord) {
-            $user = $database->exec_SELECTgetSingleRow(
-                '*',
-                $userTable,
-                'uid=' . (int)$user['uid']
-            );
+            $user = $this->fetchUserFromDatabase($userTable, (int)$user['uid']);
             static::getLogger()->debug('User record reloaded', $user);
         }
 
@@ -640,6 +633,25 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
         }
 
         return $logger;
+    }
+
+    protected function fetchUserFromDatabase(string $userTable, $userUid): ?array
+    {
+        $selectQueryBuild = $this->getDatabaseConnectionPool()->getQueryBuilderForTable($userTable);
+        $result = $selectQueryBuild->select('*')->from($userTable)->where(
+            $selectQueryBuild->expr()->eq('uid', $userUid)
+        )->execute();
+
+        if ($result->rowCount() != 1) {
+            return null;
+        }
+
+        $user = $result->fetch(FetchMode::ASSOCIATIVE);
+        if (! is_array($user)) {
+            return null;
+        }
+
+        return $user;
     }
 
 }
