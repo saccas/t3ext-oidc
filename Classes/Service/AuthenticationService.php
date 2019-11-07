@@ -346,6 +346,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
                 foreach ($valuesToUpdate as $column => $value) {
                     $query->set($column, $value);
                 }
+                $query->where($query->expr()->eq('uid', $row['uid']));
                 $query->execute();
             }
         } else {    // fe_users record does not already exist => create it
