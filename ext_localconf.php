@@ -64,5 +64,5 @@ $boot = function ($_EXTKEY) {
     }
 };
 
-$boot($_EXTKEY);
+$boot('oidc');
 unset($boot);
