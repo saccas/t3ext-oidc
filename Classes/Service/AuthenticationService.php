@@ -569,9 +569,11 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
             $GLOBALS['TSFE'] = $this->getLocalTypoScriptFrontendController();
             $GLOBALS['TSFE']->renderCharset = 'utf-8';
 
+            /** @var ServerRequestInterface $request */
+            $request = $GLOBALS['TYPO3_REQUEST'] ?? ServerRequestFactory::fromGlobals();
             /** @var $contentObj \TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer */
             $contentObj = GeneralUtility::makeInstance(\TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer::class);
-            $contentObj->start($oidc, '');
+            $contentObj->start($oidc, '', $request);
 
             // Process every TypoScript definition
             foreach ($typoScriptKeys as $typoScriptKey) {
