@@ -473,7 +473,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
 
         // Hook for post-processing the user record
         $reloadUserRecord = false;
-        if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['oidc']['resourceOwner'])) {
+        if (is_array($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['oidc']['resourceOwner'] ?? false)) {
             foreach ($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['oidc']['resourceOwner'] as $className) {
                 /** @var \Causal\Oidc\Service\ResourceOwnerHookInterface $postProcessor */
                 $postProcessor = GeneralUtility::makeInstance($className);
@@ -563,7 +563,7 @@ class AuthenticationService extends \TYPO3\CMS\Sv\AuthenticationService
         }
 
         if (count($typoScriptKeys) > 0) {
-            $backupTSFE = $GLOBALS['TSFE'];
+            $backupTSFE = $GLOBALS['TSFE'] ?? null;
 
             // Advanced stdWrap methods require a valid $GLOBALS['TSFE']
             $GLOBALS['TSFE'] = $this->getLocalTypoScriptFrontendController();
