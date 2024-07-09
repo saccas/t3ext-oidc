@@ -12,6 +12,7 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\Uri;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
@@ -36,8 +37,13 @@ class OpenIdConnectService implements LoggerAwareInterface
 
     public function isAuthenticationRequest(ServerRequestInterface $request): bool
     {
+        /** @var ?SiteLanguage $language */
         $language = $request->getAttribute('language');
-        return $request->getUri()->getPath() === $language->getBase()->getPath() . $this->config['authenticationUrlRoute'];
+        $languagePrefix = '';
+        if (isset($language)) {
+            $languagePrefix = $language->getBase()->getPath();
+        }
+        return $request->getUri()->getPath() === $languagePrefix . $this->config['authenticationUrlRoute'];
     }
 
     public function getAuthenticationRequestUrl(): ?UriInterface
