@@ -1,5 +1,9 @@
 # OpenID Connect integration for TYPO3 - changelog
 
+## Version 3.1.0
+
+- The query parameters for the authorization URL can now be modified via `GetAuthorizationUrlEvent`.
+
 ## Version 3.0.0
 
 - The callback URL changed from `/typo3conf/ext/oidc/Public/callback.php` to `TYPO3_SITE_URL`. (configurable with option `oidcRedirectUri`) [#116](https://github.com/xperseguers/t3ext-oidc/issues/116)
