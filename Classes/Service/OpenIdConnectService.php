@@ -69,8 +69,11 @@ class OpenIdConnectService implements LoggerAwareInterface
         return null;
     }
 
-    public function generateAuthenticationContext(ServerRequestInterface $request, array $authorizationUrlOptions = []): AuthenticationContext
-    {
+    public function generateAuthenticationContext(
+        ServerRequestInterface $request,
+        array $authorizationUrlOptions = [],
+        ?string $defaultLoginUrl = null,
+    ): AuthenticationContext {
         if (empty($this->config['oidcClientKey'])
             || empty($this->config['oidcClientSecret'])
             || empty($this->config['oidcEndpointAuthorize'])
@@ -90,6 +93,10 @@ class OpenIdConnectService implements LoggerAwareInterface
         }
         if (($loginUrl || $redirectUrl) && $calculatedHash !== $hash) {
             throw new InvalidArgumentException('Invalid query string', 1719003567);
+        }
+
+        if ($loginUrl === '') {
+            $loginUrl = $defaultLoginUrl;
         }
 
         $requestId = $this->getUniqueId();

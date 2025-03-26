@@ -35,6 +35,8 @@ use LogicException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Cookie;
+use TYPO3\CMS\Core\Authentication\LoginType;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
@@ -43,9 +45,13 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\EndTimeRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\HiddenRestriction;
 use TYPO3\CMS\Core\Database\Query\Restriction\StartTimeRestriction;
+use TYPO3\CMS\Core\Http\ImmediateResponseException;
+use TYPO3\CMS\Core\Http\RedirectResponse;
 use TYPO3\CMS\Core\Http\ServerRequestFactory;
+use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\HttpUtility;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\CMS\Core\Context\Context;
 use UnexpectedValueException;
@@ -93,8 +99,39 @@ class AuthenticationService extends \TYPO3\CMS\Core\Authentication\Authenticatio
 
         $user = false;
         $request = $this->getRequest();
+
         $params = $request->getQueryParams()['tx_oidc'] ?? [];
         $code = $params['code'] ?? null;
+
+        if ($request->getQueryParams()['loginProvider'] ?? '' == 1742888452490) {
+            if (!isset($code)) {
+                $query = $request->getUri()->getQuery();
+                if (!empty($query)) {
+                    $query .= '&';
+                }
+                $query .= $this->pObj->formfield_status . '=' . LoginType::LOGIN;
+                $loginUrl = $request->getUri()->withQuery($query);
+                $openIdConnectService = GeneralUtility::makeInstance(OpenIdConnectService::class);
+
+                $authContext = $openIdConnectService->generateAuthenticationContext($request, [], $loginUrl->__toString());
+                $url = new Uri($authContext->getAuthorizationUrl());
+                $response = GeneralUtility::makeInstance(RedirectResponse::class, $url);
+                $cookie = new Cookie(
+                    '__Secure-' . 'oidc_context',
+                    $authContext->toHashSignedJwt(),
+                    0,
+                    '/',
+                    null,
+                    true,
+                    true,
+                    false,
+                    Cookie::SAMESITE_LAX,
+                );
+                $response = $response->withAddedHeader('Set-Cookie', (string)$cookie);
+                throw new ImmediateResponseException($response);
+            }
+        }
+
         if ($code !== null) {
             $codeVerifier = null;
             if ($this->config['enableCodeVerifier']) {
